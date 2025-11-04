@@ -34,7 +34,18 @@ jobs:
         with:
           script: |
             const issues = '${{ steps.read-list.outputs.issues }}'.trim().split(' ');
-            const message = `Thank you for reporting this.\n\nWe've addressed it, with the fix scheduled for our next release.\nIf problems persist or you have more details, feel free to reopen or reply.`;
+            let now = new Date();
+            let nextStart = new Date(now);
+            nextStart.setUTCHours(7, 2, 0, 0);
+            if (nextStart < now) {
+              nextStart.setUTCDate(nextStart.getUTCDate() + 1);
+            }
+            let nextFinish = new Date(nextStart);
+            nextFinish.setUTCHours(nextFinish.getUTCHours() + 1);
+            const diffMs = nextFinish - now;
+            const etaHours = Math.ceil(diffMs / (1000 * 60 * 60));
+            const finishTime = nextFinish.toUTCString();
+            const message = `Thank you for reporting this.\n\nWe've addressed it, with the fix scheduled for our next release (in approx. ${etaHours} hours).\nIf problems persist or you have more details, feel free to reopen or reply.`;
             for (const issue_number of issues) {
               try {
                 await github.rest.issues.createComment({
